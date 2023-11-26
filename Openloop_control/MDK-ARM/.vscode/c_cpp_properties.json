@@ -3,16 +3,16 @@
         {
             "name": "FOC1",
             "includePath": [
-                "d:\\desktop\\FOC1\\Core\\Inc",
-                "d:\\desktop\\FOC1\\Drivers\\STM32F1xx_HAL_Driver\\Inc",
-                "d:\\desktop\\FOC1\\Drivers\\STM32F1xx_HAL_Driver\\Inc\\Legacy",
-                "d:\\desktop\\FOC1\\Drivers\\CMSIS\\Device\\ST\\STM32F1xx\\Include",
-                "d:\\desktop\\FOC1\\Drivers\\CMSIS\\Include",
+                "d:\\desktop\\FOCStudy\\Openloop_control\\Core\\Inc",
+                "d:\\desktop\\FOCStudy\\Openloop_control\\Drivers\\STM32F1xx_HAL_Driver\\Inc",
+                "d:\\desktop\\FOCStudy\\Openloop_control\\Drivers\\STM32F1xx_HAL_Driver\\Inc\\Legacy",
+                "d:\\desktop\\FOCStudy\\Openloop_control\\Drivers\\CMSIS\\Device\\ST\\STM32F1xx\\Include",
+                "d:\\desktop\\FOCStudy\\Openloop_control\\Drivers\\CMSIS\\Include",
                 "D:\\software\\keil\\ARM\\ARMCC\\include",
                 "D:\\software\\keil\\ARM\\ARMCC\\include\\rw",
-                "d:\\desktop\\FOC1\\MDK-ARM",
-                "d:\\desktop\\FOC1\\Core\\Src",
-                "d:\\desktop\\FOC1\\Drivers\\STM32F1xx_HAL_Driver\\Src"
+                "d:\\desktop\\FOCStudy\\Openloop_control\\MDK-ARM",
+                "d:\\desktop\\FOCStudy\\Openloop_control\\Core\\Src",
+                "d:\\desktop\\FOCStudy\\Openloop_control\\Drivers\\STM32F1xx_HAL_Driver\\Src"
             ],
             "defines": [
                 "USE_HAL_DRIVER",

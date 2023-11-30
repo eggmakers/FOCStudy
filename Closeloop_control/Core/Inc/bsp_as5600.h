@@ -3,30 +3,32 @@
 
 #include "i2c.h"
 
+#define abs(x) ((x) > 0 ? (x) : -(x))
+#define _2PI 6.28318530718
+#define _PI 3.14159265359
+
 #define AS5600_I2C_HANDLE hi2c1
 
-#define I2C_TIME_OUT_BASE   10
-#define I2C_TIME_OUT_BYTE   1
+#define I2C_TIME_OUT_BASE 10
+#define I2C_TIME_OUT_BYTE 1
 
 /*
-注意:AS5600的地址0x36是指的是原始7位设备地址,而ST I2C库中的设备地址是指原始设备地址左移一位得到的设备地址
+注锟斤拷:AS5600锟侥碉拷址0x36锟斤拷指锟斤拷锟斤拷原始7位锟借备锟斤拷址,锟斤拷ST I2C锟斤拷锟叫碉拷锟借备锟斤拷址锟斤拷指原始锟借备锟斤拷址锟斤拷锟斤拷一位锟矫碉拷锟斤拷锟借备锟斤拷址
 */
 
-#define AS5600_RAW_ADDR    0x36
-#define AS5600_ADDR        (AS5600_RAW_ADDR << 1)
-#define AS5600_WRITE_ADDR  (AS5600_RAW_ADDR << 1)
-#define AS5600_READ_ADDR   ((AS5600_RAW_ADDR << 1) | 1)
+#define AS5600_RAW_ADDR 0x36
+#define AS5600_ADDR (AS5600_RAW_ADDR << 1)
+#define AS5600_WRITE_ADDR (AS5600_RAW_ADDR << 1)
+#define AS5600_READ_ADDR ((AS5600_RAW_ADDR << 1) | 1)
 
+#define AS5600_RESOLUTION 4096 // 12bit Resolution
 
-#define AS5600_RESOLUTION 4096 //12bit Resolution 
-
-#define AS5600_RAW_ANGLE_REGISTER  0x0C
-
+#define AS5600_RAW_ANGLE_REGISTER 0x0C
 
 void bsp_as5600Init(void);
 uint16_t bsp_as5600GetRawAngle(void);
 float bsp_as5600GetAngle(void);
+float GetAngle(void);
+float GetAngle_without_track(void);
 
 #endif /* __BSP_AS5600_H */
-
-

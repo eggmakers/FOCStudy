@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "i2c.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -64,15 +65,10 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 void systick_CountMode(void)
 {
-	SysTick->LOAD = 0xFFFFFF-1;      //set reload register
-  SysTick->VAL  = 0;
-  SysTick->CTRL = SysTick_CTRL_ENABLE_Msk; //Enable SysTick Timer
+  SysTick->LOAD = 0xFFFFFF - 1; // set reload register
+  SysTick->VAL = 0;
+  SysTick->CTRL = SysTick_CTRL_ENABLE_Msk; // Enable SysTick Timer
 }
-
-float _electricalAngle(float shaft_angle, int pole_pairs)
-{
-  return (shaft_angle * pole_pairs);
-} // 电角度求解
 
 // 归一化角度到 [0,2PI]
 float _normalizeAngle(float angle)
@@ -87,7 +83,7 @@ void setPWM(float Ua, float Ub, float Uc)
   Ua = _constrain(Ua, 0.f, voltage_limit);
   Ub = _constrain(Ub, 0.f, voltage_limit);
   Uc = _constrain(Uc, 0.f, voltage_limit);
-  // 计算占空比
+  // 计算占空�?
   // 限制占空比在0~1
   dc_a = _constrain(Ua / voltage_power_supply, 0.f, 1.f);
   dc_b = _constrain(Ub / voltage_power_supply, 0.f, 1.f);
@@ -106,44 +102,23 @@ void setPWM(float Ua, float Ub, float Uc)
 void setPhaseVoltage(float Uq, float Ud, float angle_el)
 {
   angle_el = _normalizeAngle(angle_el + zero_electric_angle);
-  // 帕克逆变换
+  // 帕克逆变�?
   Ualpha = -Uq * sin(angle_el);
   Ubeta = Uq * cos(angle_el);
 
-  // 克拉克逆变换
+  // 克拉克�?�变�?
   Ua = Ualpha + voltage_power_supply / 2;
   Ub = (sqrt(3) * Ubeta - Ualpha) / 2 + voltage_power_supply / 2;
   Uc = (-Ualpha - sqrt(3) * Ubeta) / 2 + voltage_power_supply / 2;
   setPWM(Ua, Ub, Uc);
 }
 
-// 开环速度函数
-float velocityOpenloop(float target_velocity)
-{
-  uint32_t now_us = SysTick->VAL; // 获取从开启芯片以来的微秒数，它的精度是 4 微秒。 micros() 返回的是一个无符号长整型（unsigned long）的值
-
-  // 计算当前每个Loop的运行时间间隔
-  float Ts = (now_us - open_loop_timestamp) * 1e-6f;
-
-  if (Ts <= 0 || Ts > 0.5f)
-    Ts = 1e-3f;
-
-  shaft_angle = _normalizeAngle(shaft_angle + target_velocity * Ts);
-
-  float Uq = voltage_power_supply / 3;
-
-  setPhaseVoltage(Uq, 0, _electricalAngle(shaft_angle, 7));
-
-  open_loop_timestamp = now_us; // 用于计算下一个时间间隔
-
-  return Uq;
-}
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -170,13 +145,14 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM2_Init();
   MX_USART1_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // 开启三个PWM通道输出
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // �?启三个PWM通道输出
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
   HAL_UART_Transmit(&huart1, "helloWorld\r\n", strlen("helloWorld\r\n"), 0xFFFF);
   HAL_Delay(1000);
-	systick_CountMode();
+  systick_CountMode();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -186,23 +162,22 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    velocityOpenloop(25);
   }
   /* USER CODE END 3 */
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
+  * in the RCC_OscInitTypeDef structure.
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
@@ -216,8 +191,9 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -234,9 +210,9 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -248,14 +224,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */

@@ -48,7 +48,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-float voltage_limit = 10;
+float voltage_limit = 6;
 float voltage_power_supply = 12.6;
 float shaft_angle = 0, open_loop_timestamp = 0;
 float zero_electric_angle = 0, Ualpha, Ubeta = 0, Ua = 0, Ub = 0, Uc = 0, dc_a = 0, dc_b = 0, dc_c = 0;
@@ -62,21 +62,11 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t micros(void)
+void systick_CountMode(void)
 {
-  static uint32_t usTicks = 0;
-  static uint32_t lastTickCount = 0;
-  uint32_t tickCount = HAL_GetTick();
-
-  if (tickCount != lastTickCount)
-  {
-    // SysTick is a 24-bit counter, and the frequency is SysClock / 1000 (because HAL_GetTick is in milliseconds)
-    usTicks += (tickCount - lastTickCount) * (HAL_RCC_GetSysClockFreq() / 1000);
-    lastTickCount = tickCount;
-  }
-
-  // Return the current microsecond count
-  return usTicks + ((SysTick->LOAD - SysTick->VAL) * 1000000) / SysTick->LOAD;
+	SysTick->LOAD = 0xFFFFFF-1;      //set reload register
+  SysTick->VAL  = 0;
+  SysTick->CTRL = SysTick_CTRL_ENABLE_Msk; //Enable SysTick Timer
 }
 
 float _electricalAngle(float shaft_angle, int pole_pairs)
@@ -109,8 +99,8 @@ void setPWM(float Ua, float Ub, float Uc)
   HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 0xFFFF);
 
   __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, dc_a * 2399);
-  __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, dc_b * 2399);
-  __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_1, dc_c * 2399);
+  __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_2, dc_b * 2399);
+  __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_3, dc_c * 2399);
 }
 
 void setPhaseVoltage(float Uq, float Ud, float angle_el)
@@ -130,7 +120,7 @@ void setPhaseVoltage(float Uq, float Ud, float angle_el)
 // 开环速度函数
 float velocityOpenloop(float target_velocity)
 {
-  uint32_t now_us = micros(); // 获取从开启芯片以来的微秒数，它的精度是 4 微秒。 micros() 返回的是一个无符号长整型（unsigned long）的值
+  uint32_t now_us = SysTick->VAL; // 获取从开启芯片以来的微秒数，它的精度是 4 微秒。 micros() 返回的是一个无符号长整型（unsigned long）的值
 
   // 计算当前每个Loop的运行时间间隔
   float Ts = (now_us - open_loop_timestamp) * 1e-6f;
@@ -186,6 +176,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
   HAL_UART_Transmit(&huart1, "helloWorld\r\n", strlen("helloWorld\r\n"), 0xFFFF);
   HAL_Delay(1000);
+	systick_CountMode();
   /* USER CODE END 2 */
 
   /* Infinite loop */

@@ -449,7 +449,7 @@ ARM Macro Assembler    Page 7
               00000200 
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
-ork --depend=foc1\startup_stm32f103x6.d -ofoc1\startup_stm32f103x6.o -Id:\deskt
+ork --depend=foc1\startup_stm32f103x6.d -ofoc1\startup_stm32f103x6.o -ID:\deskt
 op\FOCStudy\Openloop_control\MDK-ARM\RTE -ID:\software\keil\ARM\PACK\ARM\CMSIS\
 4.5.0\CMSIS\Include -ID:\software\keil\ARM\PACK\Keil\STM32F1xx_DFP\2.3.0\Device
 \Include --predefine="__UVISION_VERSION SETA 518" --predefine="_RTE_ SETA 1" --

@@ -130,7 +130,7 @@ void setPhaseVoltage(float Uq, float Ud, float angle_el)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  float motor_target = 25;
+  float motor_target = 3.14;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/

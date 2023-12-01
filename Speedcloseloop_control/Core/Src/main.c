@@ -175,9 +175,8 @@ int main(void)
   while (1)
   {
 		angle_prev_ts =SysTick->VAL;
-    float Sensor_Angle = GetAngle();
     char buffer[12];
-    sprintf(buffer, "%d", angle_prev_ts);
+    sprintf(buffer, "%f", GetVelocity());
     HAL_UART_Transmit(&huart1, "\r\n", strlen("\r\n"), 0xFFFF);
     HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 0xFFFF);
     //    setPhaseVoltage(_constrain(Kp * (motor_target - DIR * Sensor_Angle) * 180 / _PI, -6, 6), 0, _electricalAngle());

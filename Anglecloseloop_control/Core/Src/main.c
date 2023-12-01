@@ -53,7 +53,7 @@ float voltage_limit = 6;
 float voltage_power_supply = 12.6;
 float shaft_angle = 0, open_loop_timestamp = 0;
 float zero_electric_angle = 0, Ualpha, Ubeta = 0, Ua = 0, Ub = 0, Uc = 0, dc_a = 0, dc_b = 0, dc_c = 0;
-float Kp = 0.1333;
+float Kp = 0.2;
 float _normalizeAngle(float angle);
 /* USER CODE END PV */
 
@@ -180,6 +180,7 @@ int main(void)
     HAL_UART_Transmit(&huart1, "\r\n", strlen("\r\n"), 0xFFFF);
     HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 0xFFFF);
     setPhaseVoltage(_constrain(Kp * (motor_target - DIR * Sensor_Angle) * 180 / _PI, -6, 6), 0, _electricalAngle());
+//		setPhaseVoltage(20, 0, _electricalAngle());
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

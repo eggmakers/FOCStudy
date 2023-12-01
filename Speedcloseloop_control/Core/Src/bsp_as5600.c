@@ -81,7 +81,7 @@ float GetVelocity()
   float Ts = (angle_prev_ts - vel_angle_prev_ts) * 1e-6;
   if (Ts <= 0)
     Ts = 1e-3f;
-  float vel = ((float)(full_rotation_offset - vel_full_rotations) * _2PI + (angle_prev - vel_angle_prev)) / Ts;
+  float vel = ((float)(full_rotation_offset - vel_full_rotations) * _2PI + (angle_data_prev - vel_angle_prev)) / Ts;
 
   vel_angle_prev = angle_prev;
   vel_full_rotations = full_rotation_offset;

@@ -28,6 +28,8 @@
 #include "string.h"
 #include <stdio.h>
 #include "math.h"
+#include "pid.h"
+#include "lowpass_filter.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +57,8 @@ float shaft_angle = 0, open_loop_timestamp = 0;
 float zero_electric_angle = 0, Ualpha, Ubeta = 0, Ua = 0, Ub = 0, Uc = 0, dc_a = 0, dc_b = 0, dc_c = 0;
 float Kp = 0.2;
 float _normalizeAngle(float angle);
+float motor_target = 3.14;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -107,9 +111,12 @@ void setPWM(float Ua, float Ub, float Uc)
   __HAL_TIM_SetCompare(&htim2, TIM_CHANNEL_3, dc_c * 2399);
 }
 
-void setPhaseVoltage(float Uq, float Ud, float angle_el)
+void setTorque(float Uq, float angle_el)
 {
-  angle_el = _normalizeAngle(angle_el + zero_electric_angle);
+  Sensor_update();
+  Uq = _constrain(Uq, -(voltage_power_supply) / 2, (voltage_power_supply) / 2);
+  float Ud = 0;
+  angle_el = _normalizeAngle(angle_el);
   // 帕克逆变换
   Ualpha = -Uq * sin(angle_el);
   Ubeta = Uq * cos(angle_el);
@@ -121,6 +128,19 @@ void setPhaseVoltage(float Uq, float Ud, float angle_el)
   setPWM(Ua, Ub, Uc);
 }
 
+float M0_Velocity()
+{
+  char buffer[12];
+  sprintf(buffer, "%f", GetVelocity());
+  HAL_UART_Transmit(&huart1, "\r\n", strlen("\r\n"), 0xFFFF);
+  HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 0xFFFF);
+  return lowpass_filter_operator(DIR * GetVelocity());
+}
+
+void DFOC_M0_setVelocity(float Target)
+{
+  setTorque(((motor_target - M0_Velocity()) * 180 / _PI), _electricalAngle());
+}
 /* USER CODE END 0 */
 
 /**
@@ -130,7 +150,7 @@ void setPhaseVoltage(float Uq, float Ud, float angle_el)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  float motor_target = 3.14;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -158,29 +178,37 @@ int main(void)
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // 开启三个PWM通道输出
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-  HAL_UART_Transmit(&huart1, "helloWorld\r\n", strlen("helloWorld\r\n"), 0xFFFF);
-  HAL_Delay(1000);
   systick_CountMode();
+  lowpass_filter_init(0.01);
   bsp_as5600Init();
-  zero_electric_angle = _electricalAngle();
+  PIDInit(0.005, 0.01, 0, 0, voltage_power_supply / 2);
 
+  setTorque(3, _3PI_2);
+  Sensor_update();
+  zero_electric_angle = _electricalAngle();
+  setTorque(0, _3PI_2);
+  HAL_UART_Transmit(&huart1, "\r\n", strlen("\r\n"), 0xFFFF);
+  HAL_UART_Transmit(&huart1, "Zero electrical angle:", strlen("Zero electrical angle:"), 0xFFFF);
   char buffer[12];
   sprintf(buffer, "%f", zero_electric_angle);
   HAL_UART_Transmit(&huart1, "\r\n", strlen("\r\n"), 0xFFFF);
   HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 0xFFFF);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		angle_prev_ts =SysTick->VAL;
-    char buffer[12];
-    sprintf(buffer, "%f", GetVelocity());
-    HAL_UART_Transmit(&huart1, "\r\n", strlen("\r\n"), 0xFFFF);
-    HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 0xFFFF);
-    //    setPhaseVoltage(_constrain(Kp * (motor_target - DIR * Sensor_Angle) * 180 / _PI, -6, 6), 0, _electricalAngle());
-    //		setPhaseVoltage(20, 0, _electricalAngle());
+    angle_prev_ts = SysTick->VAL;
+    // GetVelocity();
+    //    char buffer[12];
+    //    sprintf(buffer, "%f", GetVelocity());
+    //    HAL_UART_Transmit(&huart1, "\r\n", strlen("\r\n"), 0xFFFF);
+    //    HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 0xFFFF);
+    // setTorque(_constrain(Kp * (motor_target - DIR * Sensor_Angle) * 180 / _PI, -6, 6), _electricalAngle());
+    // setTorque(6, _electricalAngle());
+    setTorque(PIDOperator((25 - M0_Velocity()) * 180 / _PI), _electricalAngle());
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -1,13 +1,12 @@
 #include "bsp_as5600.h"
 
-static float angle_data_prev;      // 上次位置
-static float full_rotation_offset; // 转过的整圈数
-float angle_prev = 0;              // 最后一次调用 getSensorAngle() 的输出结果，用于得到完整的圈数和速度
-uint32_t angle_prev_ts = 0;            // 上次调用 getAngle 的时间戳
-float vel_angle_prev = 0;          // 最后一次调用 getVelocity 时的角度
-uint32_t vel_angle_prev_ts = 0;        // 最后速度计算时间戳
-int32_t full_rotations = 0;        // 总圈数计数
-int32_t vel_full_rotations = 0;    // 用于速度计算的先前完整旋转圈数
+static float angle_data_prev;        // 上次位置
+static float full_rotation_offset;   // 转过的整圈数
+float angle_prev = 0;                // 最后一次调用 getSensorAngle() 的输出结果，用于得到完整的圈数和速度
+uint32_t angle_prev_ts = 0;          // 上次调用 getAngle 的时间戳
+float vel_angle_prev = 0;            // 最后一次调用 getVelocity 时的角度
+uint32_t vel_angle_prev_ts = 0;      // 最后速度计算时间戳
+static float vel_full_rotations = 0; // 用于速度计算的先前完整旋转圈数
 
 void bsp_as5600Init(void)
 {
@@ -50,7 +49,7 @@ uint16_t bsp_as5600GetRawAngle(void)
   return raw_angle;
 }
 
-float GetAngle_without_track()
+float GetAngle_without_track() // 弧度
 {
   float angle = bsp_as5600GetRawAngle();
   angle = ((angle * 359) / 4095);
@@ -76,14 +75,33 @@ float bsp_as5600GetAngle(void) // 弧度
   return (full_rotation_offset + (angle_data / (float)AS5600_RESOLUTION) * _2PI);
 }
 
+void Sensor_update()
+{
+  float val = bsp_as5600GetAngle();
+  angle_prev_ts = SysTick->VAL;
+  float d_angle = val - angle_prev;
+  // 圈数检测
+  if (abs(d_angle) > (0.8f * _2PI))
+    full_rotation_offset += (d_angle > 0) ? -1 : 1;
+  angle_prev = val;
+}
+
 float GetVelocity()
 {
-  float Ts = (angle_prev_ts - vel_angle_prev_ts) * 1e-6;
+  bsp_as5600GetAngle();
+  float angle = GetAngle_without_track();
+
+  float Ts = (angle_prev_ts - angle) * 1e-6;
   if (Ts <= 0)
     Ts = 1e-3f;
-  float vel = ((float)(full_rotation_offset - vel_full_rotations) * _2PI + (angle_data_prev - vel_angle_prev)) / Ts;
+  float vel = ((full_rotation_offset - vel_full_rotations) + (angle - vel_angle_prev)) / Ts;
 
-  vel_angle_prev = angle_prev;
+  // char buffer[12];
+  // sprintf(buffer, "%f", full_rotation_offset - vel_full_rotations);
+  // HAL_UART_Transmit(&huart1, "\r\n", strlen("\r\n"), 0xFFFF);
+  // HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 0xFFFF);
+
+  vel_angle_prev = angle;
   vel_full_rotations = full_rotation_offset;
   vel_angle_prev_ts = angle_prev_ts;
   return vel;

@@ -8,6 +8,8 @@
 "foc1\stm32f1xx_it.o"
 "foc1\stm32f1xx_hal_msp.o"
 "foc1\bsp_as5600.o"
+"foc1\pid.o"
+"foc1\lowpass_filter.o"
 "foc1\stm32f1xx_hal_gpio_ex.o"
 "foc1\stm32f1xx_hal_i2c.o"
 "foc1\stm32f1xx_hal.o"
